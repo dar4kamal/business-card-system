@@ -12,7 +12,9 @@ import { Type } from 'class-transformer';
 import { SocialLink } from '../user.schema';
 import { emailRegex } from '../../utility/regex';
 
-export default class CreateUserDTO {
+import CreateCardDTO from '../../card/dto/create-card.dto';
+
+export default class CreateUserDTO extends CreateCardDTO {
   @IsNotEmpty({ message: 'name must not be empty' })
   @IsString({ message: 'name must be a valid string' })
   name: string;

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types, Schema as MongooseSchema } from 'mongoose';
+import { Types, Schema as MongooseSchema, Document } from 'mongoose';
 
 @Schema({ versionKey: false })
 export class Card {
@@ -21,4 +21,6 @@ export class Card {
 }
 
 export const CardSchema = SchemaFactory.createForClass(Card);
-CardSchema.index({ userId: 1, email: 1 });
+CardSchema.index({ email: 1, title: 1 });
+
+export type CardDocument = Card & Document;

@@ -25,7 +25,10 @@ export class UserController {
   }
 
   @Get(':userId/info')
-  getUserDetails(@Param('userId') userId: string) {
+  async getUserDetails(@Param('userId') userId: string) {
+    const checkUserExists = await this.userService.checkUserExists(userId);
+    if (!checkUserExists) throw new NotFoundException('user not found');
+
     return this.userService.getUserDetails(userId);
   }
 

@@ -1,5 +1,7 @@
 import {
+  Inject,
   Injectable,
+  forwardRef,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -15,23 +17,27 @@ import {
 import { UserRoles } from '../utility/types';
 
 import CreateUserDTO from './dto/create-user.dto';
-import UpdateUserDTO from './dto/update-info.dto';
+import UpdateUserInfoDTO from './dto/update-info.dto';
 import UpdateUserCredentialsDTO from './dto/update-credentials.dto';
 
+import { CardService } from '../card/card.service';
 import { User, UserDocument } from './user.schema';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @Inject(forwardRef(() => CardService)) private cardService: CardService,
+  ) {}
 
   async findUser(userId: string) {
-    const user = await this.userModel.findById(userId);
+    const user = await this.userModel.findOne({ id: userId });
     if (!user) throw new NotFoundException('user not found');
     return user;
   }
 
   async checkUserExists(userId: string) {
-    const user = await this.userModel.findById(userId);
+    const user = await this.userModel.findOne({ id: userId });
     return !!user;
   }
 
@@ -45,6 +51,13 @@ export class UserService {
     });
 
     await newUser.save();
+
+    const { company, title } = body;
+    await this.cardService.addOneCard(newUser.id, newUser.email, {
+      company,
+      title,
+    });
+
     return { id: newUser.id, email: body.email, password: generatedPassword };
   }
 
@@ -61,7 +74,7 @@ export class UserService {
       .select('-password -role -social._id');
   }
 
-  async updateInfo(userId: string, body: UpdateUserDTO) {
+  async updateInfo(userId: string, body: UpdateUserInfoDTO) {
     return await this.userModel
       .findByIdAndUpdate(userId, body)
       .select('-password -social._id');
@@ -82,6 +95,9 @@ export class UserService {
   }
 
   async removeUser(userId: string) {
-    return await this.userModel.findByIdAndRemove(userId);
+    await this.userModel.findByIdAndRemove(userId);
+    await this.cardService.removeUserCards(userId);
+
+    return 'User has been removed successfully';
   }
 }
