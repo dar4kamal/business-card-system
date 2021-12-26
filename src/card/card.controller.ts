@@ -6,6 +6,7 @@ import {
   Patch,
   Delete,
   Inject,
+  UseGuards,
   Controller,
   forwardRef,
   NotFoundException,
@@ -18,6 +19,9 @@ import { UserService } from '../user/user.service';
 import CreateCardDTO from './dto/create-card.dto';
 import UpdateCardDTO from './dto/update-card.dto';
 
+import { UserRoles } from '../utility/types';
+import { TemplateAuthGuard } from '../auth/guards/guard.template';
+
 @Controller('cards')
 export class CardController {
   constructor(
@@ -27,6 +31,7 @@ export class CardController {
   ) {}
 
   @Get(':userId/all')
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin, UserRoles.user]))
   async getAllUserCards(@Param('userId') userId: string) {
     const checkUserExists = await this.userService.checkUserExists(userId);
     if (!checkUserExists) throw new NotFoundException('user not found');
@@ -43,6 +48,7 @@ export class CardController {
   }
 
   @Post(':userId')
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin]))
   async createCard(
     @Param('userId') userId: string,
     @Body() createCardDTO: CreateCardDTO,
@@ -53,6 +59,7 @@ export class CardController {
   }
 
   @Patch(':cardId')
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin, UserRoles.user]))
   async updateCardDetails(
     @Param('cardId') cardId: string,
     @Body() updateCardDTO: UpdateCardDTO,
@@ -67,6 +74,7 @@ export class CardController {
   }
 
   @Delete(':cardId')
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin]))
   async removeCard(@Param('cardId') cardId: string) {
     const checkCardExists = await this.cardService.checkCardExists(cardId);
     if (!checkCardExists) throw new NotFoundException('card not found');

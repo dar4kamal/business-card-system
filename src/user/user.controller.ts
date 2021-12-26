@@ -5,6 +5,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
   Controller,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,11 +16,15 @@ import CreateUserDTO from './dto/create-user.dto';
 import UpdateUserDTO from './dto/update-info.dto';
 import UpdateUserCredentialsDTO from './dto/update-credentials.dto';
 
+import { UserRoles } from '../utility/types';
+import { TemplateAuthGuard } from '../auth/guards/guard.template';
+
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('all')
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin]))
   getAllUserDetails() {
     return this.userService.getAllUser();
   }
@@ -33,11 +38,13 @@ export class UserController {
   }
 
   @Post()
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin]))
   addOne(@Body() createUserDTO: CreateUserDTO) {
     return this.userService.addOne(createUserDTO);
   }
 
   @Patch(':userId/info')
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin, UserRoles.user]))
   async updateUserDetails(
     @Param('userId') userId: string,
     @Body() updateUserDTO: UpdateUserDTO,
@@ -49,6 +56,7 @@ export class UserController {
   }
 
   @Patch(':userId/auth')
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin, UserRoles.user]))
   async updateUserCredentials(
     @Param('userId') userId: string,
     @Body() updateUserCredentialsDTO: UpdateUserCredentialsDTO,
@@ -63,6 +71,7 @@ export class UserController {
   }
 
   @Delete(':userId')
+  @UseGuards(new TemplateAuthGuard([UserRoles.admin]))
   async removeUser(@Param('userId') userId: string) {
     const checkUserExists = await this.userService.checkUserExists(userId);
     if (!checkUserExists) throw new NotFoundException('user not found');
