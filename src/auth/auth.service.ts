@@ -23,7 +23,7 @@ export class AuthService {
     if (!user || !checkPassword(password, user.password))
       throw new BadRequestException('Invalid Credentials');
 
-    const accessToken: string = this.jwtService.sign({ email });
+    const accessToken: string = this.jwtService.sign({ email, id: user.id });
     return accessToken;
   }
 }
